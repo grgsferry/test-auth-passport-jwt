@@ -1,6 +1,15 @@
 const { User } = require("../models");
 const passport = require("../lib/passport");
 
+function format(user) {
+  const { id, username } = user;
+  return {
+    id,
+    username,
+    accessToken: user.generateToken(),
+  };
+}
+
 module.exports = {
   register: async (req, res) => {
     try {
@@ -10,13 +19,13 @@ module.exports = {
       res.json(err);
     }
   },
-  login: passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/login",
-    failureFlash: true,
-  }),
+  login: (req, res) => {
+    User.authenticate(req.body).then((user) => {
+      res.json(format(user));
+    });
+  },
   whoami: (req, res) => {
-    /* req.user adalah instance dari User Model, hasil autentikasi dari passport. */
-    res.render("profile", req.user.dataValues);
+    const currentUser = req.user;
+    res.json(currentUser);
   },
 };
